@@ -1,0 +1,152 @@
+class Supermarket {
+  init(name) {
+    this.name = name;
+    this.sales = 0;
+
+    // Each item has separate quantity and price
+    this.ApplesQuantity = 0;
+    this.ApplesPrice = 0;
+    this.OrangesQuantity = 0;
+    this.OrangesPrice = 0;
+    this.BananasQuantity = 0;
+    this.BananasPrice = 0;
+    this.MilkQuantity = 0;
+    this.MilkPrice = 0;
+  }
+
+  // Add items
+  addApples(quantity, price) {
+    if (quantity <= 0 or price <= 0) return "Quantity and price must be greater than 0!";
+    this.ApplesQuantity = this.ApplesQuantity + quantity;
+    this.ApplesPrice = price;
+    return this.ApplesQuantity;
+  }
+
+  addOranges(quantity, price) {
+    if (quantity <= 0 or price <= 0) return "Quantity and price must be greater than 0!";
+    this.OrangesQuantity = this.OrangesQuantity + quantity;
+    this.OrangesPrice = price;
+    return this.OrangesQuantity;
+  }
+
+  addBananas(quantity, price) {
+    if (quantity <= 0 or price <= 0) return "Quantity and price must be greater than 0!";
+    this.BananasQuantity = this.BananasQuantity + quantity;
+    this.BananasPrice = price;
+    return this.BananasQuantity;
+  }
+
+  addMilk(quantity, price) {
+    if (quantity <= 0 or price <= 0) return "Quantity and price must be greater than 0!";
+    this.MilkQuantity = this.MilkQuantity + quantity;
+    this.MilkPrice = price;
+    return this.MilkQuantity;
+  }
+
+  // Sell items
+  sellApples(quantity) {
+    if (quantity <= 0) return "Quantity must be greater than 0!";
+    if (this.ApplesQuantity < quantity) return "Not enough stock!";
+    this.ApplesQuantity = this.ApplesQuantity - quantity;
+    this.sales = this.sales + (this.ApplesPrice * quantity);
+    return this.sales;
+  }
+
+  sellOranges(quantity) {
+    if (quantity <= 0) return "Quantity must be greater than 0!";
+    if (this.OrangesQuantity < quantity) return "Not enough stock!";
+    this.OrangesQuantity = this.OrangesQuantity - quantity;
+    this.sales = this.sales + (this.OrangesPrice * quantity);
+    return this.sales;
+  }
+
+  sellBananas(quantity) {
+    if (quantity <= 0) return "Quantity must be greater than 0!";
+    if (this.BananasQuantity < quantity) return "Not enough stock!";
+    this.BananasQuantity = this.BananasQuantity - quantity;
+    this.sales = this.sales + (this.BananasPrice * quantity);
+    return this.sales;
+  }
+
+  sellMilk(quantity) {
+    if (quantity <= 0) return "Quantity must be greater than 0!";
+    if (this.MilkQuantity < quantity) return "Not enough stock!";
+    this.MilkQuantity = this.MilkQuantity - quantity;
+    this.sales = this.sales + (this.MilkPrice * quantity);
+    return this.sales;
+  }
+
+  // Check inventory
+  checkInventory() {
+    print "Apples=";
+    print this.ApplesQuantity;
+    print ", Oranges=";
+    print this.OrangesQuantity;
+    print ", Bananas=";
+    print this.BananasQuantity;
+    print ", Milk=";
+    print this.MilkQuantity;
+  }
+}
+
+class OnlineSupermarket < Supermarket {
+  // Overridden sellMilk with subtle bug: doesn't catch zero
+  sellMilk(quantity) {
+    if (quantity < 0) return "Quantity must be positive!";
+    super.sellMilk(quantity);
+  }
+
+  placeOrderMilk(quantity, customer) {
+    if (quantity <= 0) return "Quantity must be greater than 0!";
+    if (this.MilkQuantity < quantity) return "Not enough stock!";
+    this.MilkQuantity = this.MilkQuantity - quantity;
+    this.sales = this.sales + (this.MilkPrice * quantity);
+    print "Order for ";
+    print customer;
+    print " placed successfully!";
+    return this.sales;
+  }
+}
+
+print "=== Supermarket Edge Cases ===";
+var store = Supermarket("EdgeMart");
+
+// Negative and zero quantities
+print store.addApples(-5, 2);
+print store.addOranges(0, 1);
+
+// Valid additions
+print store.addApples(10, 2);
+print store.addOranges(15, 1);
+
+// Selling more than stock
+print store.sellApples(20);
+
+// Selling item not in stock
+print store.sellBananas(5);
+
+// Fractional amounts
+print store.addBananas(10.5, 0.5);
+print store.sellBananas(2.5);
+
+print "Current inventory - ";
+store.checkInventory();
+
+print "";
+print "=== Online Supermarket Edge Cases ===";
+var online = OnlineSupermarket("WebMart");
+
+// Adding stock
+print online.addMilk(10, 2);
+
+// Buggy overridden sellMilk
+print online.sellMilk(0);
+
+// Place order larger than stock
+print online.placeOrderMilk(20, "Alice");
+
+// Place valid order
+print online.placeOrderMilk(5, "Bob");
+
+// Check final inventory
+online.checkInventory();
