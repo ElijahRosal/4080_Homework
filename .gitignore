@@ -5,6 +5,7 @@
 *.o
 *.obj
 *.out
+*.hi
 
 # Backup / temporary files
 *~
