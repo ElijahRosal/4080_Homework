@@ -1,0 +1,208 @@
+// Elijah Rosal - CS4080 - Homework 3, Chapter 6 Question 3
+// 2.19.2026 
+/*
+Code below has been modified for Challenge Question 3 for Chapter 6 of Crafting Interpreters.
+
+Adds error productions for binary operators that appear without a left-hand operand.
+- Detects a binary operator at the beginning of an expression and reports: "Missing left-hand operand."
+- Still parses and discards the right-hand operand at the correct precedence level to recover.
+*/
+package com.craftinginterpreters.lox;
+import static com.craftinginterpreters.lox.TokenType.*;
+import java.util.List;
+class Parser {
+    private static class ParseError extends RuntimeException {}
+    private final List<Token> tokens;
+    private int current = 0;
+    Parser(List<Token> tokens) {
+        this.tokens = tokens;
+    }
+    Expr parse() {
+        try {
+            return expression();
+        } catch (ParseError error) {
+            return null;
+        }
+    }
+
+    
+    private Expr expression() {
+        return comma();
+    }
+    private Expr comma() {
+        Expr expr;
+        if (match(COMMA)) {
+            Token operator = previous();
+            Expr right = conditional();
+            Lox.error(operator, "Missing left-hand operand.");
+            expr = right;
+        } else {
+            expr = conditional();
+        }
+
+        while (match(COMMA)) {
+            Token operator = previous();
+            Expr right = conditional();
+            expr = new Expr.Binary(expr, operator, right);
+        }
+        return expr;
+    }
+    private Expr conditional() {
+        Expr expr = equality();
+
+        if (match(QUESTION)) {
+            Expr thenBranch = expression();
+            consume(COLON, "Expect ':' after then branch of conditional expression.");
+            Expr elseBranch = conditional();
+            expr = new Expr.Conditional(expr, thenBranch, elseBranch);
+        }
+
+        return expr;
+    }
+    private Expr equality() {
+        Expr expr;
+        if (match(BANG_EQUAL, EQUAL_EQUAL)) {
+            Token operator = previous();
+            Expr right = comparison();
+            Lox.error(operator, "Missing left-hand operand.");
+            expr = right;
+        } else {
+            expr = comparison();
+        }
+
+        while (match(BANG_EQUAL, EQUAL_EQUAL)) {
+            Token operator = previous();
+            Expr right = comparison();
+            expr = new Expr.Binary(expr, operator, right);
+        }
+        return expr;
+    }
+    private boolean match(TokenType... types) {
+        for (TokenType type : types) {
+            if (check(type)) {
+                advance();
+                return true;
+            }
+        }
+        return false;
+    }
+    private Token consume(TokenType type, String message) {
+        if (check(type)) return advance();
+        throw error(peek(), message);
+    }
+    private boolean check(TokenType type) {
+        if (isAtEnd()) return false;
+        return peek().type == type;
+    }
+    private Token advance() {
+        if (!isAtEnd()) current++;
+        return previous();
+    }
+    private boolean isAtEnd() {
+        return peek().type == EOF;
+    }
+    private Token peek() {
+        return tokens.get(current);
+    }
+    private Token previous() {
+        return tokens.get(current - 1);
+    }
+    private ParseError error(Token token, String message) {
+        Lox.error(token, message);
+        return new ParseError();
+    }
+    private void synchronize() {
+        advance();
+        while (!isAtEnd()) {
+            if (previous().type == SEMICOLON) return;
+            switch (peek().type) {
+                case CLASS:
+                case FUN:
+                case VAR:
+                case FOR:
+                case IF:
+                case WHILE:
+                case PRINT:
+                case RETURN:
+                    return;
+            }
+            advance();
+        }
+    }
+    private Expr comparison() {
+        Expr expr;
+        if (match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL)) {
+            Token operator = previous();
+            Expr right = term();
+            Lox.error(operator, "Missing left-hand operand.");
+            expr = right;
+        } else {
+            expr = term();
+        }
+
+        while (match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL)) {
+            Token operator = previous();
+            Expr right = term();
+            expr = new Expr.Binary(expr, operator, right);
+        }
+        return expr;
+    }
+    private Expr term() {
+        Expr expr;
+        if (match(PLUS)) {
+            Token operator = previous();
+            Expr right = factor();
+            Lox.error(operator, "Missing left-hand operand.");
+            expr = right;
+        } else {
+            expr = factor();
+        }
+
+        while (match(MINUS, PLUS)) {
+            Token operator = previous();
+            Expr right = factor();
+            expr = new Expr.Binary(expr, operator, right);
+        }
+        return expr;
+    }
+    private Expr factor() {
+        Expr expr;
+        if (match(SLASH, STAR)) {
+            Token operator = previous();
+            Expr right = unary();
+            Lox.error(operator, "Missing left-hand operand.");
+            expr = right;
+        } else {
+            expr = unary();
+        }
+
+        while (match(SLASH, STAR)) {
+            Token operator = previous();
+            Expr right = unary();
+            expr = new Expr.Binary(expr, operator, right);
+        }
+        return expr;
+    }
+    private Expr unary() {
+        if (match(BANG, MINUS)) {
+            Token operator = previous();
+            Expr right = unary();
+            return new Expr.Unary(operator, right);
+        }
+        return primary();
+    }
+    private Expr primary() {
+        if (match(FALSE)) return new Expr.Literal(false);
+        if (match(TRUE)) return new Expr.Literal(true);
+        if (match(NIL)) return new Expr.Literal(null);
+        if (match(NUMBER, STRING)) {
+            return new Expr.Literal(previous().literal);
+        }
+        if (match(LEFT_PAREN)) {
+            Expr expr = expression();
+            consume(RIGHT_PAREN, "Expect ')' after expression.");
+            return new Expr.Grouping(expr);
+        }
+        throw error(peek(), "Expect expression.");
+    }
+}
