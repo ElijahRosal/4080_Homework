@@ -1,9 +1,11 @@
 // Elijah Rosal - CS4080 - Homework 3, Chapter 6 Question 2
 // 2.19.2026 
 /*
-Code below has been modified for Challenge Question 2 for Chapter 6 of Crafting Interpreters (for Lines 31-39)
+Code below has been modified for Challenge Question 2 for Chapter 6 of Crafting Interpreters (for Lines 42-53)
 
-Adds support for comma operator
+Adds support for the C-style conditional or "ternary" operator ?:.
+- The expression between ? and : allows any precedence level (calls expression()).
+- The whole operator is right-associative: a ? b : c ? d : e parses as a ? b : (c ? d : e).
 */
 package com.craftinginterpreters.lox;
 import static com.craftinginterpreters.lox.TokenType.*;
@@ -22,17 +24,31 @@ class Parser {
             return null;
         }
     }
+
+    
     private Expr expression() {
         return comma();
     }
-    // CH6 Question 1
     private Expr comma() {
-        Expr expr = equality();
+        Expr expr = conditional();
         while (match(COMMA)) {
             Token operator = previous();
-            Expr right = equality();
+            Expr right = conditional();
             expr = new Expr.Binary(expr, operator, right);
         }
+        return expr;
+    }
+    //CH6 Question 2
+    private Expr conditional() {
+        Expr expr = equality();
+
+        if (match(QUESTION)) {
+            Expr thenBranch = expression();
+            consume(COLON, "Expect ':' after then branch of conditional expression.");
+            Expr elseBranch = conditional();
+            expr = new Expr.Conditional(expr, thenBranch, elseBranch);
+        }
+
         return expr;
     }
     private Expr equality() {
