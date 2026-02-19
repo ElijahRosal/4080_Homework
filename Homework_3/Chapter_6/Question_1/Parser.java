@@ -1,7 +1,7 @@
-// Elijah Rosal - CS4080 - Homework 3, Chapter 6 Question 2
+// Elijah Rosal - CS4080 - Homework 3, Chapter 6 Question 1
 // 2.19.2026 
 /*
-Code below has been modified for Challenge Question 2 for Chapter 6 of Crafting Interpreters (for Lines 31-39)
+Code below has been modified for Challenge Question 1 for Chapter 6 of Crafting Interpreters (for Lines 31-39)
 
 Adds support for comma operator
 */
