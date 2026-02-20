@@ -1,7 +1,7 @@
 // Elijah Rosal - CS4080 - Homework 3, Chapter 7 Question 2
 // 2.19.2026
 /*
-Code below has been modifeid for Challenge Question 2 for Chapter 7 of Crafting Interpreters
+Code below has been modifeid for Challenge Question 2 for Chapter 7 of Crafting Interpreters (98-103)
 
 Adds support for + to concatenate to a string if at least one of the operands is a string
 ex: "scone" + 4 = scone4
