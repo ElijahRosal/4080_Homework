@@ -1,3 +1,11 @@
+// Elijah Rosal - CS4080 - Homework 4, Chapter 9 Question 3
+// 2.23.2026
+/*
+Code below has been modified for Question 3 for Chapter 9 of Crafting Interpreters.
+
+Adds support for break statements in loops by generating a Break statement node
+in the statement AST hierarchy.
+*/
 package com.craftinginterpreters.tool;
 import java.io.IOException;
 import java.io.PrintWriter;

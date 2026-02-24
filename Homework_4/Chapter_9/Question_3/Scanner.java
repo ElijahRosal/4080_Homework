@@ -1,3 +1,10 @@
+// Elijah Rosal - CS4080 - Homework 4, Chapter 9 Question 3
+// 2.23.2026
+/*
+Code below has been modified for Question 3 for Chapter 9 of Crafting Interpreters.
+
+Adds lexical support for break by recognizing break as a reserved keyword token.
+*/
 package com.craftinginterpreters.lox;
 import static com.craftinginterpreters.lox.TokenType.*;
 import java.util.ArrayList;

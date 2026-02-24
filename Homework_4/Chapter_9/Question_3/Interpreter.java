@@ -1,10 +1,10 @@
-// Elijah Rosal - CS4080 - Homework 3, Chapter 7 Question 3
-// 2.19.2026
+// Elijah Rosal - CS4080 - Homework 4, Chapter 9 Question 3
+// 2.23.2026
 /*
-Code below has been modifeid for Challenge Question 3 for Chapter 7 of Crafting Interpreters (106-109)
+Code below has been modified for Question 3 for Chapter 9 of Crafting Interpreters.
 
-Adds support for + to concatenate to a string if at least one of the operands is a string
-ex: "scone" + 4 = scone4
+Adds runtime support for break statements in loops. A break exits the nearest
+enclosing loop, including when nested inside blocks or if statements.
 */
 package com.craftinginterpreters.lox;
 import java.util.List;
