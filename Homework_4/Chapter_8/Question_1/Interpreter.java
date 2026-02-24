@@ -1,10 +1,11 @@
-// Elijah Rosal - CS4080 - Homework 3, Chapter 7 Question 3
-// 2.19.2026
+// Elijah Rosal - CS4080 - Homework 4, Chapter 8 Question 1
+// 2.23.2026
 /*
-Code below has been modifeid for Challenge Question 3 for Chapter 7 of Crafting Interpreters (106-109)
+Code below has been modified for Question 1 for Chapter 8 of Crafting Interpreters.
 
-Adds support for + to concatenate to a string if at least one of the operands is a string
-ex: "scone" + 4 = scone4
+Adds REPL expression evaluation output behavior.
+- Adds interpret(Expr expression) to evaluate a bare expression.
+- Prints evaluated expression results using stringify().
 */
 package com.craftinginterpreters.lox;
 import java.util.List;
@@ -110,7 +111,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
     @Override
     public Void visitVarStmt(Stmt.Var stmt) {
-        Object value = Environment.UNINITIALIZED;
+        Object value = null;
         if (stmt.initializer != null) {
             value = evaluate(stmt.initializer);
         }
@@ -182,6 +183,15 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             for (Stmt statement : statements) {
                 execute(statement);
             }
+        } catch (RuntimeError error) {
+            Lox.runtimeError(error);
+        }
+    }
+
+    void interpret(Expr expression) {
+        try {
+            Object value = evaluate(expression);
+            System.out.println(stringify(value));
         } catch (RuntimeError error) {
             Lox.runtimeError(error);
         }

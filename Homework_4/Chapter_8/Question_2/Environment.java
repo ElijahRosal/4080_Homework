@@ -1,3 +1,11 @@
+// Elijah Rosal - CS4080 - Homework 4, Chapter 8 Question 2
+// 2.23.2026
+/*
+Code below has been modified for Question 2 for Chapter 8 of Crafting Interpreters.
+
+Adds explicit tracking for uninitialized variables. Accessing a variable declared
+without an initializer now throws a runtime error until it is assigned.
+*/
 package com.craftinginterpreters.lox;
 import java.util.HashMap;
 import java.util.Map;
