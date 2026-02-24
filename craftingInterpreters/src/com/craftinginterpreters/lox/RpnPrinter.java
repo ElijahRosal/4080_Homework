@@ -14,6 +14,11 @@ class RpnPrinter implements Expr.Visitor<String> {
     }
 
     @Override
+    public String visitAssignExpr(Expr.Assign expr) {
+        return expr.name.lexeme + " " + expr.value.accept(this) + " =";
+    }
+
+    @Override
     public String visitConditionalExpr(Expr.Conditional expr) {
         return expr.condition.accept(this) + " " +
                 expr.thenBranch.accept(this) + " " +
@@ -31,6 +36,18 @@ class RpnPrinter implements Expr.Visitor<String> {
     public String visitLiteralExpr(Expr.Literal expr) {
         if (expr.value == null) return "nil";
         return expr.value.toString();
+    }
+
+    @Override
+    public String visitLogicalExpr(Expr.Logical expr) {
+        return expr.left.accept(this) + " " +
+                expr.right.accept(this) + " " +
+                expr.operator.lexeme;
+    }
+
+    @Override
+    public String visitVariableExpr(Expr.Variable expr) {
+        return expr.name.lexeme;
     }
 
     @Override
