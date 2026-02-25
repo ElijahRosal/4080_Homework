@@ -19,6 +19,18 @@ class RpnPrinter implements Expr.Visitor<String> {
     }
 
     @Override
+    public String visitCallExpr(Expr.Call expr) {
+        // In RPN: callee arg1 arg2 ... argN N call
+        StringBuilder builder = new StringBuilder();
+        builder.append(expr.callee.accept(this));
+        for (Expr argument : expr.arguments) {
+            builder.append(" ").append(argument.accept(this));
+        }
+        builder.append(" ").append(expr.arguments.size()).append(" call");
+        return builder.toString();
+    }
+
+    @Override
     public String visitConditionalExpr(Expr.Conditional expr) {
         return expr.condition.accept(this) + " " +
                 expr.thenBranch.accept(this) + " " +
