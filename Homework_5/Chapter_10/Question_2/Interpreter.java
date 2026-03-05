@@ -1,3 +1,12 @@
+// Elijah Rosal - CS4080 - Homework 5, Chapter 10 Question 2
+// 2.25.2026
+/*
+Code below has been modified for Question 2 for Chapter 10 of Crafting Interpreters.
+
+Adds runtime support for evaluating anonymous function expressions as first-class
+callable values that capture the current environment.
+*/
+
 package com.craftinginterpreters.lox;
 import java.util.ArrayList;
 import java.util.List;
@@ -248,6 +257,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    // CH10 Q2 CHANGE: Evaluates anonymous function expression into a callable closure.
     public Object visitFunctionExpr(Expr.Function expr) {
         return new LoxFunction(expr, environment);
     }

@@ -1,3 +1,12 @@
+// Elijah Rosal - CS4080 - Homework 5, Chapter 10 Question 2
+// 2.25.2026
+/*
+Code below has been modified for Question 2 for Chapter 10 of Crafting Interpreters.
+
+Adds support for anonymous function expressions by generating a Function expression node
+in the expression AST hierarchy.
+*/
+
 package com.craftinginterpreters.tool;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -16,6 +25,7 @@ public class GenerateAst {
                 "Binary : Expr left, Token operator, Expr right",
                 "Call : Expr callee, Token paren, List<Expr> arguments",
                 "Conditional : Expr condition, Expr thenBranch, Expr elseBranch",
+                // CH10 Q2 CHANGE: Adds anonymous function expression node generation.
             "Function : List<Token> params, List<Stmt> body",
                 "Grouping : Expr expression",
                 "Literal : Object value",

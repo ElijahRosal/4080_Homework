@@ -1,3 +1,12 @@
+// Elijah Rosal - CS4080 - Homework 5, Chapter 10 Question 2
+// 2.25.2026
+/*
+Code below has been modified for Question 2 for Chapter 10 of Crafting Interpreters.
+
+Adds parsing support for anonymous function expressions and disambiguates
+named function declarations from fun expressions in expression statements.
+*/
+
 package com.craftinginterpreters.lox;
 import static com.craftinginterpreters.lox.TokenType.*;
 import java.util.ArrayList;
@@ -24,6 +33,7 @@ class Parser {
     }
     private Stmt declaration() {
         try {
+            // CH10 Q2 CHANGE: Disambiguates named declaration `fun name(...)` from anonymous `fun (...)` expression.
             if (check(FUN) && checkNext(IDENTIFIER)) {
                 advance();
                 return function("function");
@@ -166,6 +176,7 @@ class Parser {
         return new Stmt.Function(name, parameters, body);
     }
 
+    // CH10 Q2 CHANGE: Parses anonymous function expression `fun (params) { body }`.
     private Expr.Function functionExpression() {
         consume(LEFT_PAREN, "Expect '(' after 'fun'.");
         List<Token> parameters = new ArrayList<>();
@@ -289,6 +300,7 @@ class Parser {
         if (isAtEnd()) return false;
         return peek().type == type;
     }
+    // CH10 Q2 CHANGE: Lookahead helper used to detect named function declarations.
     private boolean checkNext(TokenType type) {
         if (current + 1 >= tokens.size()) return false;
         return tokens.get(current + 1).type == type;
@@ -418,6 +430,7 @@ class Parser {
     }
 
     private Expr primary() {
+        // CH10 Q2 CHANGE: Allows anonymous functions in expression position, including expression statements.
         if (match(FUN)) {
             return functionExpression();
         }

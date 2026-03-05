@@ -1,8 +1,18 @@
+// Elijah Rosal - CS4080 - Homework 5, Chapter 10 Question 2
+// 2.25.2026
+/*
+Code below has been modified for Question 2 for Chapter 10 of Crafting Interpreters.
+
+Extends function objects to support both named function declarations and
+anonymous function expression declarations.
+*/
+
 package com.craftinginterpreters.lox;
 import java.util.List;
 class LoxFunction implements LoxCallable {
     private final List<Token> params;
     private final List<Stmt> body;
+    // CH10 Q2 CHANGE: `name` is null for anonymous function expressions.
     private final String name;
     private final Environment closure;
 
@@ -13,6 +23,7 @@ class LoxFunction implements LoxCallable {
         this.closure = closure;
     }
 
+    // CH10 Q2 CHANGE: Constructor overload for anonymous Expr.Function nodes.
     LoxFunction(Expr.Function declaration, Environment closure) {
         this.params = declaration.params;
         this.body = declaration.body;
@@ -41,6 +52,7 @@ class LoxFunction implements LoxCallable {
     }
     @Override
     public String toString() {
+        // CH10 Q2 CHANGE: Anonymous functions print without a name.
         if (name == null) return "<fn>";
         return "<fn " + name + ">";
     }

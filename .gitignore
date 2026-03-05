@@ -1,4 +1,3 @@
-.gitignore
 .idea/
 # Compiled files
 *.exe
@@ -18,4 +17,4 @@
 /bin/
 
 # VS Code settings (optional)
-.vscode/
+.vscode

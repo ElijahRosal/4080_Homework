@@ -1,3 +1,12 @@
+// Elijah Rosal - CS4080 - Homework 5, Chapter 10 Question 2
+// 2.25.2026
+/*
+Code below has been modified for Question 2 for Chapter 10 of Crafting Interpreters.
+
+Adds visitor support for printing anonymous function expression nodes
+in the AST printer.
+*/
+
 package com.craftinginterpreters.lox;
 class AstPrinter implements Expr.Visitor<String> {
     String print(Expr expr) {
@@ -27,6 +36,7 @@ class AstPrinter implements Expr.Visitor<String> {
         return parenthesize("?:", expr.condition, expr.thenBranch, expr.elseBranch);
     }
     @Override
+    // CH10 Q2 CHANGE: Handles printing anonymous function expression nodes.
     public String visitFunctionExpr(Expr.Function expr) {
         return "(fun ...)";
     }

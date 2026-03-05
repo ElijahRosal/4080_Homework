@@ -1,3 +1,12 @@
+// Elijah Rosal - CS4080 - Homework 5, Chapter 10 Question 2
+// 2.25.2026
+/*
+Code below has been modified for Question 2 for Chapter 10 of Crafting Interpreters.
+
+Adds visitor support for handling anonymous function expression nodes
+in the RPN printer.
+*/
+
 package com.craftinginterpreters.lox;
 
 class RpnPrinter implements Expr.Visitor<String> {
@@ -38,6 +47,7 @@ class RpnPrinter implements Expr.Visitor<String> {
     }
 
     @Override
+    // CH10 Q2 CHANGE: Handles anonymous function expression nodes in RPN visitor.
     public String visitFunctionExpr(Expr.Function expr) {
         return "fun";
     }
