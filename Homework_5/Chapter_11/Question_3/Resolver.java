@@ -1,4 +1,13 @@
 package com.craftinginterpreters.lox;
+// Elijah Rosal - CS4080 - Homework 5, Chapter 11 Question 3
+// 3.5.2026
+/*
+Code below has been modified for Question 3 for Chapter 11 of Crafting Interpreters.
+
+Adds resolver support for reporting a static error when a local variable
+is declared but never read in its scope.
+*/
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,6 +17,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private final Stack<Map<String, VariableState>> scopes = new Stack<>();
     private FunctionType currentFunction = FunctionType.NONE;
 
+    // Tracks declaration metadata so we can detect write-only locals.
     private static class VariableState {
         final Token name;
         boolean defined;
@@ -187,6 +197,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
     private void endScope() {
         Map<String, VariableState> scope = scopes.peek();
+        // Report locals that were declared but never read before leaving the scope.
         for (VariableState variable : scope.values()) {
             if (variable.defined && !variable.used) {
                 Lox.error(variable.name,
