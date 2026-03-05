@@ -1,4 +1,13 @@
 package com.craftinginterpreters.lox;
+// Elijah Rosal - CS4080 - Homework 5, Chapter 11 Question 4
+// 3.5.2026
+/*
+Code below has been modified for Question 4 for Chapter 11 of Crafting Interpreters.
+
+Extends resolver scope tracking to assign each local declaration a unique slot index
+and resolves variable accesses with both lexical depth and slot index metadata.
+*/
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,11 +19,13 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     private static class Scope {
         final Map<String, VariableState> variables = new HashMap<>();
+        // Next slot id to assign in this lexical scope.
         int nextIndex = 0;
     }
 
     private static class VariableState {
         final Token name;
+        // Stable local slot index used by runtime Environment slots.
         final int index;
         boolean defined;
         boolean used;
@@ -209,6 +220,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             Lox.error(name,
                     "Already a variable with this name in this scope.");
         }
+        // Assign one unique slot per local declaration in this scope.
         int index = scope.nextIndex;
         scope.nextIndex++;
         scope.variables.put(name.lexeme, new VariableState(name, index, false));
@@ -225,6 +237,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
                 if (markUsed) {
                     variable.used = true;
                 }
+                // Resolver records both lexical depth and slot index.
                 interpreter.resolve(expr, scopes.size() - 1 - i, variable.index);
                 return;
             }

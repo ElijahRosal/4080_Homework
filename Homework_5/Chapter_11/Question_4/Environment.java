@@ -1,4 +1,13 @@
 package com.craftinginterpreters.lox;
+// Elijah Rosal - CS4080 - Homework 5, Chapter 11 Question 4
+// 3.5.2026
+/*
+Code below has been modified for Question 4 for Chapter 11 of Crafting Interpreters.
+
+Updates the environment to support indexed local-variable slots so resolved locals
+can be accessed by (scope distance, slot index) instead of name-map lookup.
+*/
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -7,6 +16,7 @@ class Environment {
     static final Object UNINITIALIZED = new Object();
     final Environment enclosing;
     private final Map<String, Object> values = new HashMap<>();
+    // Slot array for fast local access by resolver-assigned index.
     private final List<Object> slots = new ArrayList<>();
     Object get(Token name) {
         if (values.containsKey(name.lexeme)) {
@@ -35,6 +45,7 @@ class Environment {
     }
     void define(String name, Object value) {
         values.put(name, value);
+        // Declaration order matches resolver slot indices for this scope.
         slots.add(value);
     }
     Environment ancestor(int distance) {
@@ -50,6 +61,7 @@ class Environment {
             throw new RuntimeError(name,
                     "Undefined variable '" + name.lexeme + "'.");
         }
+        // Local lookup uses slot index instead of a string key lookup.
         Object value = environment.slots.get(index);
         if (value == UNINITIALIZED) {
             throw new RuntimeError(name,
@@ -63,6 +75,7 @@ class Environment {
             throw new RuntimeError(name,
                     "Undefined variable '" + name.lexeme + "'.");
         }
+        // Update slot first; map is kept in sync for existing name-based paths.
         environment.slots.set(index, value);
         environment.values.put(name.lexeme, value);
     }

@@ -1,8 +1,17 @@
 package com.craftinginterpreters.lox;
+// Elijah Rosal - CS4080 - Homework 5, Chapter 11 Question 4
+// 3.5.2026
+/*
+Code below has been modified for Question 4 for Chapter 11 of Crafting Interpreters.
+
+Stores resolver local bindings as (scope distance, slot index) pairs and uses
+indexed environment operations for faster local variable reads and writes.
+*/
+
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     private static class BreakSignal extends RuntimeException {
         BreakSignal() {
@@ -11,7 +20,9 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     private static class LocalRef {
+        // Number of scopes between current environment and declaration scope.
         final int distance;
+        // Slot position inside that declaration scope.
         final int index;
 
         LocalRef(int distance, int index) {
@@ -70,6 +81,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     private Object lookUpVariable(Token name, Expr expr) {
         LocalRef local = locals.get(expr);
         if (local != null) {
+            // Fast path: direct indexed local access.
             return environment.getAt(local.distance, local.index, name);
         } else {
             return globals.get(name);
@@ -124,6 +136,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         stmt.accept(this);
     }
     void resolve(Expr expr, int depth, int index) {
+        // Cache resolver metadata so runtime skips name-based local lookup.
         locals.put(expr, new LocalRef(depth, index));
     }
     void executeBlock(List<Stmt> statements,
@@ -207,6 +220,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         Object value = evaluate(expr.value);
         LocalRef local = locals.get(expr);
         if (local != null) {
+            // Fast path: direct indexed local write.
             environment.assignAt(local.distance, local.index, expr.name, value);
         } else {
             globals.assign(expr.name, value);
