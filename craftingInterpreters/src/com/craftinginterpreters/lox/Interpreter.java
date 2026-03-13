@@ -9,20 +9,9 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             super(null, null, false, false);
         }
     }
-
-    private static class LocalRef {
-        final int distance;
-        final int index;
-
-        LocalRef(int distance, int index) {
-            this.distance = distance;
-            this.index = index;
-        }
-    }
-
     final Environment globals = new Environment();
     private Environment environment = globals;
-    private final Map<Expr, LocalRef> locals = new HashMap<>();
+    private final Map<Expr, Integer> locals = new HashMap<>();
     Interpreter() {
         globals.define("clock", new LoxCallable() {
             @Override
@@ -51,6 +40,21 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return evaluate(expr.right);
     }
     @Override
+    public Object visitSetExpr(Expr.Set expr) {
+        Object object = evaluate(expr.object);
+        if (!(object instanceof LoxInstance)) {
+            throw new RuntimeError(expr.name,
+                    "Only instances have fields.");
+        }
+        Object value = evaluate(expr.value);
+        ((LoxInstance)object).set(expr.name, value);
+        return value;
+    }
+    @Override
+    public Object visitThisExpr(Expr.This expr) {
+        return lookUpVariable(expr.keyword, expr);
+    }
+    @Override
     public Object visitUnaryExpr(Expr.Unary expr) {
         Object right = evaluate(expr.right);
         switch (expr.operator.type) {
@@ -66,14 +70,6 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object visitVariableExpr(Expr.Variable expr) {
         return lookUpVariable(expr.name, expr);
-    }
-    private Object lookUpVariable(Token name, Expr expr) {
-        LocalRef local = locals.get(expr);
-        if (local != null) {
-            return environment.getAt(local.distance, local.index, name);
-        } else {
-            return globals.get(name);
-        }
     }
     private void checkNumberOperand(Token operator, Object
             operand) {
@@ -123,9 +119,19 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     private void execute(Stmt stmt) {
         stmt.accept(this);
     }
-    void resolve(Expr expr, int depth, int index) {
-        locals.put(expr, new LocalRef(depth, index));
+
+    void resolve(Expr expr, int depth) {
+        locals.put(expr, depth);
     }
+
+    private Object lookUpVariable(Token name, Expr expr) {
+        Integer distance = locals.get(expr);
+        if (distance != null) {
+            return environment.getAt(distance, name.lexeme);
+        }
+        return globals.get(name);
+    }
+
     void executeBlock(List<Stmt> statements,
                       Environment environment) {
         Environment previous = this.environment;
@@ -145,13 +151,25 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return null;
     }
     @Override
+    public Void visitClassStmt(Stmt.Class stmt) {
+        environment.define(stmt.name.lexeme, null);
+        Map<String, LoxFunction> methods = new HashMap<>();
+        for (Stmt.Function method : stmt.methods) {
+            LoxFunction function = new LoxFunction(method, environment, method.name.lexeme.equals("init"));
+            methods.put(method.name.lexeme, function);
+        }
+        LoxClass klass = new LoxClass(stmt.name.lexeme, methods);
+        environment.assign(stmt.name, klass);
+        return null;
+    }
+    @Override
     public Void visitExpressionStmt(Stmt.Expression stmt) {
         evaluate(stmt.expression);
         return null;
     }
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt) {
-        LoxFunction function = new LoxFunction(stmt, environment);
+        LoxFunction function = new LoxFunction(stmt, environment, false);
         environment.define(stmt.name.lexeme, function);
         return null;
     }
@@ -205,12 +223,14 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object visitAssignExpr(Expr.Assign expr) {
         Object value = evaluate(expr.value);
-        LocalRef local = locals.get(expr);
-        if (local != null) {
-            environment.assignAt(local.distance, local.index, expr.name, value);
+
+        Integer distance = locals.get(expr);
+        if (distance != null) {
+            environment.assignAt(distance, expr.name, value);
         } else {
             globals.assign(expr.name, value);
         }
+
         return value;
     }
     @Override
@@ -276,12 +296,15 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
         return function.call(this, arguments);
     }
-
     @Override
-    public Object visitFunctionExpr(Expr.Function expr) {
-        return new LoxFunction(expr, environment);
+    public Object visitGetExpr(Expr.Get expr) {
+        Object object = evaluate(expr.object);
+        if (object instanceof LoxInstance) {
+            return ((LoxInstance) object).get(expr.name);
+        }
+        throw new RuntimeError(expr.name,
+                "Only instances have properties.");
     }
-
     @Override
     public Object visitConditionalExpr(Expr.Conditional expr) {
         return null;

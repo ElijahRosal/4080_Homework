@@ -24,16 +24,24 @@ class Parser {
     }
     private Stmt declaration() {
         try {
-            if (check(FUN) && checkNext(IDENTIFIER)) {
-                advance();
-                return function("function");
-            }
+            if (match(CLASS)) return classDeclaration();
+            if (match(FUN)) return function("function");
             if (match(VAR)) return varDeclaration();
             return statement();
         } catch (ParseError error) {
             synchronize();
             return null;
         }
+    }
+    private Stmt classDeclaration() {
+        Token name = consume(IDENTIFIER, "Expect class name.");
+        consume(LEFT_BRACE, "Expect '{' before class body.");
+        List<Stmt.Function> methods = new ArrayList<>();
+        while (!check(RIGHT_BRACE) && !isAtEnd()) {
+            methods.add(function("method"));
+        }
+        consume(RIGHT_BRACE, "Expect '}' after class body.");
+        return new Stmt.Class(name, methods);
     }
     private Stmt statement() {
         if (match(FOR)) return forStatement();
@@ -165,25 +173,6 @@ class Parser {
         List<Stmt> body = block();
         return new Stmt.Function(name, parameters, body);
     }
-
-    private Expr.Function functionExpression() {
-        consume(LEFT_PAREN, "Expect '(' after 'fun'.");
-        List<Token> parameters = new ArrayList<>();
-        if (!check(RIGHT_PAREN)) {
-            do {
-                if (parameters.size() >= 255) {
-                    error(peek(),
-                            "Can't have more than 255 parameters.");
-                }
-                parameters.add(
-                        consume(IDENTIFIER, "Expect parameter name."));
-            } while (match(COMMA));
-        }
-        consume(RIGHT_PAREN, "Expect ')' after parameters.");
-        consume(LEFT_BRACE, "Expect '{' before function body.");
-        List<Stmt> body = block();
-        return new Expr.Function(parameters, body);
-    }
     private List<Stmt> block() {
         List<Stmt> statements = new ArrayList<>();
         while (!check(RIGHT_BRACE) && !isAtEnd()) {
@@ -201,6 +190,9 @@ class Parser {
             if (expr instanceof Expr.Variable) {
                 Token name = ((Expr.Variable) expr).name;
                 return new Expr.Assign(name, value);
+            } else if (expr instanceof Expr.Get) {
+                Expr.Get get = (Expr.Get) expr;
+                return new Expr.Set(get.object, get.name, value);
             }
             error(equals, "Invalid assignment target.");
         }
@@ -288,10 +280,6 @@ class Parser {
     private boolean check(TokenType type) {
         if (isAtEnd()) return false;
         return peek().type == type;
-    }
-    private boolean checkNext(TokenType type) {
-        if (current + 1 >= tokens.size()) return false;
-        return tokens.get(current + 1).type == type;
     }
     private Token advance() {
         if (!isAtEnd()) current++;
@@ -410,6 +398,10 @@ class Parser {
         while (true) {
             if (match(LEFT_PAREN)) {
                 expr = finishCall(expr);
+            } else if (match(DOT)) {
+                Token name = consume(IDENTIFIER,
+                        "Expect property name after '.'.");
+                expr = new Expr.Get(expr, name);
             } else {
                 break;
             }
@@ -418,15 +410,13 @@ class Parser {
     }
 
     private Expr primary() {
-        if (match(FUN)) {
-            return functionExpression();
-        }
         if (match(FALSE)) return new Expr.Literal(false);
         if (match(TRUE)) return new Expr.Literal(true);
         if (match(NIL)) return new Expr.Literal(null);
         if (match(NUMBER, STRING)) {
             return new Expr.Literal(previous().literal);
         }
+        if (match(THIS)) return new Expr.This(previous());
         if (match(IDENTIFIER)) {
             return new Expr.Variable(previous());
         }

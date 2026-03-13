@@ -1,13 +1,10 @@
 package com.craftinginterpreters.lox;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 class Environment {
     static final Object UNINITIALIZED = new Object();
     final Environment enclosing;
     private final Map<String, Object> values = new HashMap<>();
-    private final List<Object> slots = new ArrayList<>();
     Object get(Token name) {
         if (values.containsKey(name.lexeme)) {
             Object value = values.get(name.lexeme);
@@ -35,8 +32,8 @@ class Environment {
     }
     void define(String name, Object value) {
         values.put(name, value);
-        slots.add(value);
     }
+
     Environment ancestor(int distance) {
         Environment environment = this;
         for (int i = 0; i < distance; i++) {
@@ -44,28 +41,15 @@ class Environment {
         }
         return environment;
     }
-    Object getAt(int distance, int index, Token name) {
-        Environment environment = ancestor(distance);
-        if (index < 0 || index >= environment.slots.size()) {
-            throw new RuntimeError(name,
-                    "Undefined variable '" + name.lexeme + "'.");
-        }
-        Object value = environment.slots.get(index);
-        if (value == UNINITIALIZED) {
-            throw new RuntimeError(name,
-                    "Variable '" + name.lexeme + "' has not been initialized.");
-        }
-        return value;
+
+    Object getAt(int distance, String name) {
+        return ancestor(distance).values.get(name);
     }
-    void assignAt(int distance, int index, Token name, Object value) {
-        Environment environment = ancestor(distance);
-        if (index < 0 || index >= environment.slots.size()) {
-            throw new RuntimeError(name,
-                    "Undefined variable '" + name.lexeme + "'.");
-        }
-        environment.slots.set(index, value);
-        environment.values.put(name.lexeme, value);
+
+    void assignAt(int distance, Token name, Object value) {
+        ancestor(distance).values.put(name.lexeme, value);
     }
+
     Environment() {
         enclosing = null;
     }
