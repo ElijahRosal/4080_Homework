@@ -1,0 +1,142 @@
+Trace for expression: (-1 + 2) * 3 - -4
+
+Token stream:
+( - 1 + 2 ) * 3 - - 4 EOF
+
+Call order with who called whom and arguments:
+
+1. compile calls expression
+
+2. expression calls parsePrecedence(PREC_ASSIGNMENT)
+
+3. parsePrecedence(PREC_ASSIGNMENT)
+	- advance consumes (
+	- prefix rule for ( is grouping
+	- calls grouping
+
+4. grouping
+	- calls expression (for inside parentheses)
+
+5. expression
+	- calls parsePrecedence(PREC_ASSIGNMENT)
+
+6. parsePrecedence(PREC_ASSIGNMENT) inside grouping
+	- advance consumes first -
+	- prefix rule for - is unary
+	- calls unary
+
+7. unary (operatorType = TOKEN_MINUS)
+	- calls parsePrecedence(PREC_UNARY) for operand
+
+8. parsePrecedence(PREC_UNARY)
+	- advance consumes 1
+	- prefix rule for number is number
+	- calls number
+	- number returns
+	- while check: current is + with precedence PREC_TERM
+	- condition is PREC_UNARY <= PREC_TERM, false
+	- returns to unary
+
+9. unary resumes
+	- emits negate for -1
+	- returns to parsePrecedence(PREC_ASSIGNMENT) inside grouping
+
+10. parsePrecedence(PREC_ASSIGNMENT) inside grouping continues
+	- while check: current is +, condition true
+	- advance consumes +
+	- infix rule for + is binary
+	- calls binary
+
+11. binary (operatorType = TOKEN_PLUS)
+	- rule precedence is PREC_TERM
+	- calls parsePrecedence(PREC_FACTOR) for right operand because binary uses operator precedence + 1
+
+12. parsePrecedence(PREC_FACTOR)
+	- advance consumes 2
+	- prefix rule is number
+	- calls number
+	- number returns
+	- while check: current is ) with PREC_NONE
+	- condition false
+	- returns to binary
+
+13. binary resumes
+	- emits add
+	- returns to parsePrecedence(PREC_ASSIGNMENT) inside grouping
+
+14. parsePrecedence(PREC_ASSIGNMENT) inside grouping
+	- while check: current is ) with PREC_NONE
+	- condition false
+	- returns to grouping
+
+15. grouping resumes
+	- consume expects )
+	- consume advances past )
+	- returns to outer parsePrecedence(PREC_ASSIGNMENT)
+
+16. outer parsePrecedence(PREC_ASSIGNMENT) continues
+	- current is * with PREC_FACTOR, condition true
+	- advance consumes *
+	- infix rule is binary
+	- calls binary
+
+17. binary (operatorType = TOKEN_STAR)
+	- rule precedence is PREC_FACTOR
+	- calls parsePrecedence(PREC_UNARY) for right operand
+
+18. parsePrecedence(PREC_UNARY)
+	- advance consumes 3
+	- prefix rule is number
+	- calls number
+	- number returns
+	- while check: current is - with PREC_TERM
+	- condition false
+	- returns to binary
+
+19. binary resumes
+	- emits multiply
+	- returns to outer parsePrecedence(PREC_ASSIGNMENT)
+
+20. outer parsePrecedence(PREC_ASSIGNMENT)
+	- current is - with PREC_TERM, condition true
+	- advance consumes infix -
+	- infix rule is binary
+	- calls binary
+
+21. binary (operatorType = TOKEN_MINUS)
+	- rule precedence is PREC_TERM
+	- calls parsePrecedence(PREC_FACTOR) for right operand
+
+22. parsePrecedence(PREC_FACTOR)
+	- advance consumes second - (the unary one)
+	- prefix rule for - is unary
+	- calls unary
+
+23. unary (operatorType = TOKEN_MINUS)
+	- calls parsePrecedence(PREC_UNARY)
+
+24. parsePrecedence(PREC_UNARY)
+	- advance consumes 4
+	- prefix rule is number
+	- calls number
+	- number returns
+	- while check: current is EOF with PREC_NONE
+	- condition false
+	- returns to unary
+
+25. unary resumes
+	- emits negate for -4
+	- returns to parsePrecedence(PREC_FACTOR)
+
+26. parsePrecedence(PREC_FACTOR)
+	- while check: current is EOF with PREC_NONE
+	- condition false
+	- returns to binary
+27. binary resumes
+	- emits subtract
+	- returns to outer parsePrecedence(PREC_ASSIGNMENT)
+
+28. outer parsePrecedence(PREC_ASSIGNMENT)
+	- while check: current is EOF with PREC_NONE
+	- condition false
+	- returns to expression, then compile
