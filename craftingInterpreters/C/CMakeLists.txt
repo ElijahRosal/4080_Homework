@@ -19,4 +19,6 @@ add_executable(C common.h
         compiler.h
         compiler.c
         scanner.h
-        scanner.c)
+        scanner.c
+        object.c
+        object.h)
