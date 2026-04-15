@@ -21,4 +21,6 @@ add_executable(C common.h
         scanner.h
         scanner.c
         object.c
-        object.h)
+        object.h
+        table.c
+        table.h)
