@@ -1,0 +1,28 @@
+Benchmark Results
+Generated: 2026-04-16
+
+=== bench_bulk 100000 ===
+bulk n=100000
+insert: 65.81 ms (1.52 Mops/s)
+lookup: 2.36 ms (42.46 Mops/s), found=100000
+
+=== bench_delete_churn 100000 300000 ===
+delete_churn pool=100000 ops=300000
+mixed ops: 54.74 ms (10.96 Mops/s)
+inserts=141841 deletes=158159 gets=300000 get_hits=158294
+
+=== bench_collision 50000 ===
+normal n=50000
+  insert: 8.79 ms
+  lookup: 1.10 ms, found=50000
+forced_collision n=50000
+  insert: 20427.36 ms
+  lookup: 9669.76 ms, found=50000
+
+=== bench_scale ===
+scale benchmark
+n=1000  insert_ns/op=443.3  lookup_ns/op=61.1
+n=5000  insert_ns/op=324.0  lookup_ns/op=56.8
+n=20000  insert_ns/op=351.3  lookup_ns/op=66.2
+n=100000  insert_ns/op=157.7  lookup_ns/op=22.4
+n=300000  insert_ns/op=140.8  lookup_ns/op=29.2

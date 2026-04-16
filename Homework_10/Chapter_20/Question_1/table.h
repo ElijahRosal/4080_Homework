@@ -1,3 +1,12 @@
+// Elijah Rosal - CS4080 - Homework 10, Chapter 20 Question 1
+// 4.16.2026
+/*
+Code below has been modified for Question 1 for Chapter 20 of Crafting Interpreters.
+
+Generalizes clox's hash table key support from strings only to include
+other primitive key types used by Lox values.
+*/
+
 #ifndef clox_table_h
 #define clox_table_h
 #include "common.h"

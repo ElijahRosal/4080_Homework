@@ -1,3 +1,12 @@
+// Elijah Rosal - CS4080 - Homework 10, Chapter 20 Question 1
+// 4.16.2026
+/*
+Code below has been modified for Question 1 for Chapter 20 of Crafting Interpreters.
+
+Updates string interning table insertion to use the generalized Value-key
+table API.
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include "memory.h"
