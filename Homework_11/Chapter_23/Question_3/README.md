@@ -43,7 +43,3 @@ This improves readability in input-processing and retry workflows where one pass
 4. Emit `OP_JUMP_IF_FALSE` back-edge logic (or equivalent combination):
    - if condition is falsey, jump back to `loopStart`.
 5. Pop condition value on both control paths to preserve zero net stack effect.
-
-### Notes
-
-This folder contains the full copied C source baseline. The feature here is a design proposal (not implemented), as the challenge asks to invent and evaluate a novel control-flow construct.
