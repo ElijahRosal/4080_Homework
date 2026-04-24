@@ -1,3 +1,13 @@
+// Elijah Rosal - CS4080 - Homework 11, Chapter 22 Question 1
+// 4.23.2026
+/*
+Code below has been modified for Question 1 for Chapter 22 of Crafting Interpreters.
+
+Replaces linear local-variable resolution with a hash-bucket based lookup
+structure to reduce average identifier lookup cost while preserving scope
+and shadowing behavior.
+*/
+
 #ifndef clox_chunk_h
 #define clox_chunk_h
 #include "common.h"
@@ -8,6 +18,7 @@ typedef enum {
     OP_TRUE,
     OP_FALSE,
     OP_POP,
+    OP_DUP,
     OP_GET_LOCAL,
     OP_SET_LOCAL,
     OP_GET_GLOBAL,

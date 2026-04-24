@@ -1,3 +1,13 @@
+// Elijah Rosal - CS4080 - Homework 11, Chapter 22 Question 1
+// 4.23.2026
+/*
+Code below has been modified for Question 1 for Chapter 22 of Crafting Interpreters.
+
+Replaces linear local-variable resolution with a hash-bucket based lookup
+structure to reduce average identifier lookup cost while preserving scope
+and shadowing behavior.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -357,6 +367,73 @@ static void printStatement() {
     emitByte(OP_PRINT);
 }
 
+static void switchStatement() {
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'switch'.");
+    expression();
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after switch value.");
+    consume(TOKEN_LEFT_BRACE, "Expect '{' before switch cases.");
+
+    int endJumps[UINT8_COUNT];
+    int endJumpCount = 0;
+    bool seenDefault = false;
+
+    while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
+        if (match(TOKEN_CASE)) {
+            if (seenDefault) {
+                error("Can't have 'case' after 'default'.");
+            }
+
+            emitByte(OP_DUP);
+            expression();
+            consume(TOKEN_COLON, "Expect ':' after case value.");
+
+            emitByte(OP_EQUAL);
+            int nextCaseJump = emitJump(OP_JUMP_IF_FALSE);
+            emitByte(OP_POP); // comparison result when matched
+
+            while (!check(TOKEN_CASE) &&
+                   !check(TOKEN_DEFAULT) &&
+                   !check(TOKEN_RIGHT_BRACE) &&
+                   !check(TOKEN_EOF)) {
+                statement();
+            }
+
+            if (endJumpCount == UINT8_COUNT) {
+                error("Too many case clauses in switch.");
+            } else {
+                endJumps[endJumpCount++] = emitJump(OP_JUMP);
+            }
+
+            patchJump(nextCaseJump);
+            emitByte(OP_POP); // comparison result when not matched
+        } else if (match(TOKEN_DEFAULT)) {
+            if (seenDefault) {
+                error("Already have a default clause in this switch.");
+            }
+            seenDefault = true;
+            consume(TOKEN_COLON, "Expect ':' after 'default'.");
+
+            while (!check(TOKEN_CASE) &&
+                   !check(TOKEN_DEFAULT) &&
+                   !check(TOKEN_RIGHT_BRACE) &&
+                   !check(TOKEN_EOF)) {
+                statement();
+            }
+        } else {
+            error("Expect 'case' or 'default' in switch statement.");
+            advance();
+        }
+    }
+
+    consume(TOKEN_RIGHT_BRACE, "Expect '}' after switch statement.");
+
+    for (int i = 0; i < endJumpCount; i++) {
+        patchJump(endJumps[i]);
+    }
+
+    emitByte(OP_POP); // switch value
+}
+
 static void ifStatement() {
     consume(TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
     expression();
@@ -457,6 +534,7 @@ static void synchronize() {
             case TOKEN_VAR:
             case TOKEN_FOR:
             case TOKEN_IF:
+            case TOKEN_SWITCH:
             case TOKEN_WHILE:
             case TOKEN_PRINT:
             case TOKEN_RETURN:
@@ -482,6 +560,8 @@ static void statement() {
         forStatement();
     } else if (match(TOKEN_IF)) {
         ifStatement();
+    } else if (match(TOKEN_SWITCH)) {
+        switchStatement();
     } else if (match(TOKEN_WHILE)) {
         whileStatement();
     } else if (match(TOKEN_LEFT_BRACE)) {
@@ -516,6 +596,7 @@ ParseRule rules[] = {
     [TOKEN_DOT] = {NULL, NULL, PREC_NONE},
     [TOKEN_MINUS] = {unary, binary, PREC_TERM},
     [TOKEN_PLUS] = {NULL, binary, PREC_TERM},
+    [TOKEN_COLON] = {NULL, NULL, PREC_NONE},
     [TOKEN_SEMICOLON] = {NULL, NULL, PREC_NONE},
     [TOKEN_SLASH] = {NULL, binary, PREC_FACTOR},
     [TOKEN_STAR] = {NULL, binary, PREC_FACTOR},
@@ -531,7 +612,9 @@ ParseRule rules[] = {
     [TOKEN_STRING] = {string, NULL, PREC_NONE},
     [TOKEN_NUMBER] = {number, NULL, PREC_NONE},
     [TOKEN_AND] = {NULL, and_, PREC_AND},
+    [TOKEN_CASE] = {NULL, NULL, PREC_NONE},
     [TOKEN_CLASS] = {NULL, NULL, PREC_NONE},
+    [TOKEN_DEFAULT] = {NULL, NULL, PREC_NONE},
     [TOKEN_ELSE] = {NULL, NULL, PREC_NONE},
     [TOKEN_FALSE] = {literal, NULL, PREC_NONE},
     [TOKEN_FOR] = {NULL, NULL, PREC_NONE},
@@ -543,6 +626,7 @@ ParseRule rules[] = {
     [TOKEN_RETURN] = {NULL, NULL, PREC_NONE},
     [TOKEN_SUPER] = {NULL, NULL, PREC_NONE},
     [TOKEN_THIS] = {NULL, NULL, PREC_NONE},
+    [TOKEN_SWITCH] = {NULL, NULL, PREC_NONE},
     [TOKEN_TRUE] = {literal, NULL, PREC_NONE},
     [TOKEN_VAR] = {NULL, NULL, PREC_NONE},
     [TOKEN_WHILE] = {NULL, NULL, PREC_NONE},

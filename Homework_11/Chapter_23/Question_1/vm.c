@@ -1,3 +1,13 @@
+// Elijah Rosal - CS4080 - Homework 11, Chapter 22 Question 1
+// 4.23.2026
+/*
+Code below has been modified for Question 1 for Chapter 22 of Crafting Interpreters.
+
+Replaces linear local-variable resolution with a hash-bucket based lookup
+structure to reduce average identifier lookup cost while preserving scope
+and shadowing behavior.
+*/
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -98,6 +108,7 @@ push(valueType(a op b)); \
             case OP_TRUE: push(BOOL_VAL(true)); break;
             case OP_FALSE: push(BOOL_VAL(false)); break;
             case OP_POP: pop(); break;
+            case OP_DUP: push(peek(0)); break;
             case OP_GET_LOCAL: {
                 uint8_t slot = READ_BYTE();
                 push(vm.stack[slot]);

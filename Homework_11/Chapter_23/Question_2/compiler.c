@@ -1,3 +1,13 @@
+// Elijah Rosal - CS4080 - Homework 11, Chapter 22 Question 1
+// 4.23.2026
+/*
+Code below has been modified for Question 1 for Chapter 22 of Crafting Interpreters.
+
+Replaces linear local-variable resolution with a hash-bucket based lookup
+structure to reduce average identifier lookup cost while preserving scope
+and shadowing behavior.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,8 +54,15 @@ typedef struct {
     int scopeDepth;
 } Compiler;
 
+typedef struct Loop {
+    int continueTarget;
+    int scopeDepth;
+    struct Loop* enclosing;
+} Loop;
+
 Parser parser;
 Compiler* current = NULL;
+Loop* currentLoop = NULL;
 Chunk* compilingChunk;
 static Chunk* currentChunk() {
     return compilingChunk;
@@ -180,6 +197,7 @@ static void expression();
 static void statement();
 static void declaration();
 static void block();
+static void continueStatement();
 static void and_(bool canAssign);
 static void or_(bool canAssign);
 static ParseRule* getRule(TokenType type);
@@ -357,6 +375,24 @@ static void printStatement() {
     emitByte(OP_PRINT);
 }
 
+static void continueStatement() {
+    if (currentLoop == NULL) {
+        error("Can't use 'continue' outside of a loop.");
+        consume(TOKEN_SEMICOLON, "Expect ';' after 'continue'.");
+        return;
+    }
+
+    consume(TOKEN_SEMICOLON, "Expect ';' after 'continue'.");
+
+    for (int i = current->localCount - 1;
+         i >= 0 && current->locals[i].depth > currentLoop->scopeDepth;
+         i--) {
+        emitByte(OP_POP);
+    }
+
+    emitLoop(currentLoop->continueTarget);
+}
+
 static void ifStatement() {
     consume(TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
     expression();
@@ -378,6 +414,12 @@ static void ifStatement() {
 static void whileStatement() {
     int loopStart = currentChunk()->count;
 
+    Loop loop;
+    loop.enclosing = currentLoop;
+    loop.scopeDepth = current->scopeDepth;
+    loop.continueTarget = loopStart;
+    currentLoop = &loop;
+
     consume(TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
     expression();
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
@@ -386,6 +428,8 @@ static void whileStatement() {
     emitByte(OP_POP);
     statement();
     emitLoop(loopStart);
+
+    currentLoop = loop.enclosing;
 
     patchJump(exitJump);
     emitByte(OP_POP);
@@ -426,8 +470,16 @@ static void forStatement() {
         patchJump(bodyJump);
     }
 
+    Loop loop;
+    loop.enclosing = currentLoop;
+    loop.scopeDepth = current->scopeDepth;
+    loop.continueTarget = loopStart;
+    currentLoop = &loop;
+
     statement();
     emitLoop(loopStart);
+
+    currentLoop = loop.enclosing;
 
     if (exitJump != -1) {
         patchJump(exitJump);
@@ -457,6 +509,7 @@ static void synchronize() {
             case TOKEN_VAR:
             case TOKEN_FOR:
             case TOKEN_IF:
+            case TOKEN_CONTINUE:
             case TOKEN_WHILE:
             case TOKEN_PRINT:
             case TOKEN_RETURN:
@@ -478,6 +531,8 @@ static void declaration() {
 static void statement() {
     if (match(TOKEN_PRINT)) {
         printStatement();
+    } else if (match(TOKEN_CONTINUE)) {
+        continueStatement();
     } else if (match(TOKEN_FOR)) {
         forStatement();
     } else if (match(TOKEN_IF)) {
@@ -532,6 +587,7 @@ ParseRule rules[] = {
     [TOKEN_NUMBER] = {number, NULL, PREC_NONE},
     [TOKEN_AND] = {NULL, and_, PREC_AND},
     [TOKEN_CLASS] = {NULL, NULL, PREC_NONE},
+    [TOKEN_CONTINUE] = {NULL, NULL, PREC_NONE},
     [TOKEN_ELSE] = {NULL, NULL, PREC_NONE},
     [TOKEN_FALSE] = {literal, NULL, PREC_NONE},
     [TOKEN_FOR] = {NULL, NULL, PREC_NONE},

@@ -1,3 +1,13 @@
+// Elijah Rosal - CS4080 - Homework 11, Chapter 22 Question 1
+// 4.23.2026
+/*
+Code below has been modified for Question 1 for Chapter 22 of Crafting Interpreters.
+
+Replaces linear local-variable resolution with a hash-bucket based lookup
+structure to reduce average identifier lookup cost while preserving scope
+and shadowing behavior.
+*/
+
 #include <stdio.h>
 #include "debug.h"
 #include "value.h"
@@ -57,6 +67,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
             return simpleInstruction("OP_FALSE", offset);
         case OP_POP:
             return simpleInstruction("OP_POP", offset);
+        case OP_DUP:
+            return simpleInstruction("OP_DUP", offset);
         case OP_GET_LOCAL:
             return byteInstruction("OP_GET_LOCAL", chunk, offset);
         case OP_SET_LOCAL:
