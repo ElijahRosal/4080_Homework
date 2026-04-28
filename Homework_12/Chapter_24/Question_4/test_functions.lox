@@ -1,0 +1,78 @@
+// Test program for new native functions
+
+print "=== Math Functions ===";
+print "sqrt(16) = " sqrt(16);
+print "sqrt(2) = " sqrt(2);
+print "abs(-42) = " abs(-42);
+print "abs(42) = " abs(42);
+print "floor(3.7) = " floor(3.7);
+print "floor(-3.7) = " floor(-3.7);
+print "ceil(3.2) = " ceil(3.2);
+print "ceil(-3.2) = " ceil(-3.2);
+print "round(3.5) = " round(3.5);
+print "round(3.4) = " round(3.4);
+print "";
+
+print "=== Min/Max Functions ===";
+print "min(5, 3, 8, 1) = " min(5, 3, 8, 1);
+print "max(5, 3, 8, 1) = " max(5, 3, 8, 1);
+print "min(10) = " min(10);
+print "max(10) = " max(10);
+print "";
+
+print "=== Character Functions ===";
+print "chr(65) = " chr(65);
+print "chr(122) = " chr(122);
+print "ord(\"A\") = " ord("A");
+print "ord(\"z\") = " ord("z");
+print "";
+
+print "=== Type and String Functions ===";
+print "type(42) = " type(42);
+print "type(\"hello\") = " type("hello");
+print "type(true) = " type(true);
+print "type(nil) = " type(nil);
+print "";
+
+print "str(42) = " str(42);
+print "str(3.14) = " str(3.14);
+print "str(true) = " str(true);
+print "str(nil) = " str(nil);
+print "";
+
+print "len(\"Hello\") = " len("Hello");
+print "len(\"\") = " len("");
+print "";
+
+print "=== Practical Examples ===";
+// Celsius to Fahrenheit converter
+fun celsius_to_fahrenheit(c) {
+  return c * 9 / 5 + 32;
+}
+
+print "0°C = " celsius_to_fahrenheit(0) "°F";
+print "100°C = " celsius_to_fahrenheit(100) "°F";
+print "";
+
+// Distance calculator
+fun distance(x1, y1, x2, y2) {
+  var dx = x2 - x1;
+  var dy = y2 - y1;
+  return sqrt(dx * dx + dy * dy);
+}
+
+print "Distance from (0,0) to (3,4) = " distance(0, 0, 3, 4);
+print "";
+
+// String processing
+fun char_codes(s) {
+  var i = 0;
+  print "Codes for \"" s "\":";
+  while (i < len(s)) {
+    var c = chr(ord(s));
+    print "  Pos " i " = " ord(s);
+    i = i + 1;
+  }
+}
+
+print "Done!";

@@ -1,0 +1,53 @@
+// Benchmark to test IP register optimization
+// This program performs heavy computation with lots of function calls
+
+fun fib(n) {
+  if (n <= 1) return n;
+  return fib(n - 1) + fib(n - 2);
+}
+
+fun factorial(n) {
+  if (n <= 1) return 1;
+  return n * factorial(n - 1);
+}
+
+fun fibonacci_iterative(n) {
+  var a = 0;
+  var b = 1;
+  var i = 0;
+  while (i < n) {
+    var temp = a + b;
+    a = b;
+    b = temp;
+    i = i + 1;
+  }
+  return a;
+}
+
+fun loop_test(count) {
+  var sum = 0;
+  var i = 0;
+  while (i < count) {
+    sum = sum + i;
+    i = i + 1;
+  }
+  return sum;
+}
+
+// Run benchmarks
+print "Starting benchmarks...";
+print "clock() = " clock();
+
+print "fib(20) = " fib(20);
+print "clock() = " clock();
+
+print "factorial(15) = " factorial(15);
+print "clock() = " clock();
+
+print "fibonacci_iterative(1000) = " fibonacci_iterative(1000);
+print "clock() = " clock();
+
+print "loop_test(100000) = " loop_test(100000);
+print "clock() = " clock();
+
+print "Done!";

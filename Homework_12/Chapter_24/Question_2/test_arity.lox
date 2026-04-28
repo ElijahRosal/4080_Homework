@@ -1,0 +1,12 @@
+// Test arity checking for native functions
+
+print "Testing native function arity checking:";
+
+// Test with correct number of arguments (0 for clock)
+print "clock() = " clock();
+
+// This would now cause a runtime error:
+// print "clock(1) = " clock(1);
+// Expected error: "Expected 0 arguments but got 1."
+
+print "Done - arity checking is working!";

@@ -1,0 +1,45 @@
+// Simple demonstration of all native functions
+
+print "=== Basic Math ===";
+print "sqrt(9) = " sqrt(9);
+print "abs(-5) = " abs(-5);
+print "floor(2.9) = " floor(2.9);
+print "ceil(2.1) = " ceil(2.1);
+print "round(2.5) = " round(2.5);
+print "";
+
+print "=== Multiple Arguments ===";
+print "min(10, 5, 20, 3) = " min(10, 5, 20, 3);
+print "max(10, 5, 20, 3) = " max(10, 5, 20, 3);
+print "";
+
+print "=== Character Conversion ===";
+print "chr(72) = " chr(72);
+print "chr(101) = " chr(101);
+print "chr(108) = " chr(108);
+print "chr(108) = " chr(108);
+print "chr(111) = " chr(111);
+print "";
+print "ord(\"H\") = " ord("H");
+print "ord(\"i\") = " ord("i");
+print "";
+
+print "=== Type Introspection ===";
+print "type(123) = " type(123);
+print "type(\"text\") = " type("text");
+print "type(true) = " type(true);
+print "type(nil) = " type(nil);
+print "";
+
+print "=== String Conversion ===";
+print "str(42) = " str(42);
+print "str(3.14159) = " str(3.14159);
+print "str(false) = " str(false);
+print "";
+
+print "=== String Length ===";
+print "len(\"Lox\") = " len("Lox");
+print "len(\"Programming\") = " len("Programming");
+print "";
+
+print "All functions working correctly!";

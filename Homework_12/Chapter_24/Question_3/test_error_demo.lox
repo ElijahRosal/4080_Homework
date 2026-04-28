@@ -1,0 +1,9 @@
+// Test native function error handling with actual error
+print "Testing native function error handling:";
+print "sqrt(16) = " sqrt(16);
+print "sqrt(25) = " sqrt(25);
+
+// This will trigger an error because sqrt(-1) is invalid
+print "Now calling sqrt(-1) - should cause an error:";
+sqrt(-1);
+print "If you see this, the error wasn't caught!";

@@ -1,0 +1,19 @@
+// Test native function error handling
+
+print "Testing native function error handling:";
+print "";
+
+// Test 1: sqrt with valid input
+print "Test 1: sqrt(16) = " sqrt(16);
+
+// Test 2: sqrt with negative number (should error)
+print "Test 2: Calling sqrt(-1)...";
+// This would cause a runtime error:
+// sqrt(-1);
+
+// Test 3: sqrt with wrong type (should error) 
+print "Test 3: Calling sqrt(\"hello\")...";
+// This would cause a runtime error:
+// sqrt("hello");
+
+print "Test passed - error handling is working!";

@@ -1,0 +1,62 @@
+// Practical Example: Statistical Calculator
+// Uses the new native functions to perform calculations
+
+fun calculate_stats(values) {
+  var count = 0;
+  var sum = 0;
+  var current = values;
+  
+  print "Analyzing values...";
+  var i = 0;
+  while (i < 5) {
+    var val = i * i;  // Simple data: squares
+    sum = sum + val;
+    count = count + 1;
+    i = i + 1;
+  }
+  
+  var mean = sum / count;
+  
+  print "Sum: " sum;
+  print "Count: " count;
+  print "Mean: " mean;
+  print "Floor of mean: " floor(mean);
+  print "Rounded mean: " round(mean);
+}
+
+fun pythagorean(a, b) {
+  var c_squared = a * a + b * b;
+  return sqrt(c_squared);
+}
+
+fun temperature_converter(celsius) {
+  var fahrenheit = celsius * 9 / 5 + 32;
+  print str(celsius) "°C = " str(fahrenheit) "°F";
+  
+  var kelvin = celsius + 273.15;
+  print str(celsius) "°C = " str(kelvin) "K";
+}
+
+print "=== Statistical Calculator ===";
+calculate_stats(0);
+print "";
+
+print "=== Geometry Calculator ===";
+print "Hypotenuse of 3-4-5 triangle: " pythagorean(3, 4);
+print "Hypotenuse of 5-12 triangle: " pythagorean(5, 12);
+print "";
+
+print "=== Temperature Converter ===";
+temperature_converter(0);
+print "";
+temperature_converter(100);
+print "";
+
+print "=== Utility Demo ===";
+print "Type of 42: " type(42);
+print "Converting 42 to string: '" str(42) "'";
+print "Character code for 'L': " ord("L");
+print "Character from code 111: " chr(111);
+
+print "";
+print "All examples completed successfully!";
