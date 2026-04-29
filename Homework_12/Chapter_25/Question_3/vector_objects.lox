@@ -1,0 +1,40 @@
+// Elijah Rosal - CS4080 - Homework 12, Chapter 25 Question 3
+// 4.28.2026
+// Code below was made for Question 3 for Chapter 25 of Crafting Interpreters.
+//
+// This program models a two-dimensional vector using closures. Each
+// constructed vector closes over its own x and y coordinates, exposes
+// accessors for those coordinates, and provides an addition method that
+// returns a new vector.
+
+fun vector(x, y) {
+  fun getX() {
+    return x;
+  }
+
+  fun getY() {
+    return y;
+  }
+
+  fun add(other) {
+    return vector(x + other("x")(), y + other("y")());
+  }
+
+  fun dispatch(name) {
+    if (name == "x") return getX;
+    if (name == "y") return getY;
+    if (name == "add") return add;
+    return nil;
+  }
+
+  return dispatch;
+}
+
+var first = vector(2, 3);
+var second = vector(5, 7);
+var third = first("add")(second);
+
+print first("x")();
+print first("y")();
+print third("x")();
+print third("y")();
