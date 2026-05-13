@@ -18,17 +18,19 @@ static Obj* allocateObject(size_t size, ObjType type) {
 #endif
     return object;
 }
-ObjBoundMethod* newBoundMethod(Value receiver,
- ObjClosure* method) {
+ObjBoundMethod* newBoundMethod(Value receiver, ObjClosure* method,
+    ObjClass* definingClass) {
     ObjBoundMethod* bound = ALLOCATE_OBJ(ObjBoundMethod,
     OBJ_BOUND_METHOD);
     bound->receiver = receiver;
     bound->method = method;
+    bound->definingClass = definingClass;
     return bound;
 }
 ObjClass* newClass(ObjString* name) {
     ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS);
     klass->name = name;
+    klass->superclass = NULL;  // Initialize superclass
     initTable(&klass->methods);
     return klass;
 }

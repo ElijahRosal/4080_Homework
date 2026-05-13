@@ -9,6 +9,7 @@ typedef struct {
  ObjClosure* closure;
  uint8_t* ip;
  Value* slots;
+ ObjClass* definingClass;  // Class that defined the currently executing method (for inner)
 } CallFrame;
 typedef struct {
  CallFrame frames[FRAMES_MAX];

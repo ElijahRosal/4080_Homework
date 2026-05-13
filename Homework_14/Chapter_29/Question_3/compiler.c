@@ -57,6 +57,7 @@ typedef struct Compiler {
     int localCount;
     Upvalue upvalues[UINT8_COUNT];
     int scopeDepth;
+    ObjString* methodName;  // Current method name if in a method, NULL otherwise
 } Compiler;
 typedef struct ClassCompiler {
     struct ClassCompiler* enclosing;
@@ -176,6 +177,7 @@ static void initCompiler(Compiler* compiler, FunctionType type) {
     compiler->type = type;
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
+    compiler->methodName = NULL;  // Initialize method name tracking
     compiler->function = newFunction();
     current = compiler;
     if (type != TYPE_SCRIPT) {
@@ -183,6 +185,10 @@ static void initCompiler(Compiler* compiler, FunctionType type) {
        copyString(parser.previous.start,
 
        parser.previous.length);
+    }
+    // Store the method name for later use in inner()
+    if (type == TYPE_METHOD || type == TYPE_INITIALIZER) {
+        current->methodName = copyString(parser.previous.start, parser.previous.length);
     }
     Local* local = &current->locals[current->localCount++];
     local->depth = 0;
@@ -465,6 +471,23 @@ static void super_(bool canAssign) {
         emitBytes(OP_GET_SUPER, name);
     }
 }
+static void inner_(bool canAssign) {
+    if (currentClass == NULL) {
+        error("Can't use 'inner' outside of a class.");
+    } else if (!current->methodName) {
+        error("Can't use 'inner' outside of a method.");
+    }
+    // inner() is called as a method call
+    if (match(TOKEN_LEFT_PAREN)) {
+        uint8_t argCount = argumentList();
+        namedVariable(syntheticToken("this"), false);
+        uint8_t name = makeConstant(OBJ_VAL(current->methodName));
+        emitBytes(OP_INNER_INVOKE, name);
+        emitByte(argCount);
+    } else {
+        error("inner must be called as a method: inner().");
+    }
+}
 static void this_(bool canAssign) {
     if (currentClass == NULL) {
         error("Can't use 'this' outside of a class.");
@@ -514,12 +537,14 @@ static void function(FunctionType type) {
 }
 static void method() {
     consume(TOKEN_IDENTIFIER, "Expect method name.");
-    uint8_t constant = identifierConstant(&parser.previous);
+    Token methodToken = parser.previous;
+    uint8_t constant = identifierConstant(&methodToken);
     FunctionType type = TYPE_METHOD;
-    if (parser.previous.length == 4 && memcmp(parser.previous.start, "init", 4) == 0) {
+    if (methodToken.length == 4 && memcmp(methodToken.start, "init", 4) == 0) {
         type = TYPE_INITIALIZER;
     }
     function(type);
+    // The method name is now in the compiler's methodName field
     emitBytes(OP_METHOD, constant);
 }
 static void funDeclaration() {
@@ -789,6 +814,7 @@ ParseRule rules[] = {
     [TOKEN_FOR] = {NULL, NULL, PREC_NONE},
     [TOKEN_FUN] = {NULL, NULL, PREC_NONE},
     [TOKEN_IF] = {NULL, NULL, PREC_NONE},
+    [TOKEN_INNER] = {inner_, NULL, PREC_NONE},
     [TOKEN_NIL] = {literal, NULL, PREC_NONE},
     [TOKEN_OR] = {NULL, or_, PREC_OR},
     [TOKEN_PRINT] = {NULL, NULL, PREC_NONE},

@@ -39,7 +39,8 @@ typedef enum {
     OP_RETURN,
     OP_CLASS,
     OP_INHERIT,
-    OP_METHOD
+    OP_METHOD,
+    OP_INNER_INVOKE  // For BETA-style inner method calls
    } OpCode;
 typedef struct {
     int count;

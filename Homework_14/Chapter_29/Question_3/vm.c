@@ -91,6 +91,26 @@ static bool call(ObjClosure* closure, int argCount) {
     frame->closure = closure;
     frame->ip = closure->function->chunk.code;
     frame->slots = vm.stackTop - argCount - 1;
+    frame->definingClass = NULL;  // Default: not a method
+    return true;
+}
+
+// Call a method with a known defining class
+static bool callMethod(ObjClosure* closure, int argCount, ObjClass* definingClass) {
+    if (argCount != closure->function->arity) {
+        runtimeError("Expected %d arguments but got %d.",
+        closure->function->arity, argCount);
+        return false;
+    }
+    if (vm.frameCount == FRAMES_MAX) {
+        runtimeError("Stack overflow.");
+        return false;
+    }
+    CallFrame* frame = &vm.frames[vm.frameCount++];
+    frame->closure = closure;
+    frame->ip = closure->function->chunk.code;
+    frame->slots = vm.stackTop - argCount - 1;
+    frame->definingClass = definingClass;  // Track defining class for inner
     return true;
 }
 static bool callValue(Value callee, int argCount) {
@@ -99,39 +119,39 @@ static bool callValue(Value callee, int argCount) {
             case OBJ_BOUND_METHOD: {
                 ObjBoundMethod* bound = AS_BOUND_METHOD(callee);
                 vm.stackTop[-argCount - 1] = bound->receiver;
-                return call(bound->method, argCount);
-                case OBJ_CLASS: {
-                    ObjClass* klass = AS_CLASS(callee);
-                    vm.stackTop[-argCount - 1] = OBJ_VAL(newInstance(klass));
-                    Value initializer;
-                    if (tableGet(&klass->methods, vm.initString,
-                    &initializer)) {
-                        return call(AS_CLOSURE(initializer), argCount);
-                    }  else if (argCount != 0) {
-                        runtimeError("Expected 0 arguments but got %d.",
-                        argCount);
-                        return false;
-                        return false;
-                        return true;
-                    }
-                    case OBJ_CLOSURE:
-                    return call(AS_CLOSURE(callee), argCount);
-                    case OBJ_NATIVE: {
-                        NativeFn native = AS_NATIVE(callee);
-                        Value result = native(argCount, vm.stackTop -
-                       argCount);
-                        vm.stackTop -= argCount + 1;
-                        push(result);
-                        return true;
-                    }
-                    default:
-                    break; // Non-callable object type.
-                }
+                return callMethod(bound->method, argCount, bound->definingClass);
             }
-                runtimeError("Can only call functions and classes.");
-                return false;
+            case OBJ_CLASS: {
+                ObjClass* klass = AS_CLASS(callee);
+                vm.stackTop[-argCount - 1] = OBJ_VAL(newInstance(klass));
+                Value initializer;
+                if (tableGet(&klass->methods, vm.initString,
+                    &initializer)) {
+                    ObjClass* initClass = findMethodDefiningClass(klass, vm.initString, &initializer);
+                    return callMethod(AS_CLOSURE(initializer), argCount, initClass);
+                } else if (argCount != 0) {
+                    runtimeError("Expected 0 arguments but got %d.",
+                    argCount);
+                    return false;
+                }
+                return true;
+            }
+            case OBJ_CLOSURE:
+                return call(AS_CLOSURE(callee), argCount);
+            case OBJ_NATIVE: {
+                NativeFn native = AS_NATIVE(callee);
+                Value result = native(argCount, vm.stackTop -
+                   argCount);
+                vm.stackTop -= argCount + 1;
+                push(result);
+                return true;
+            }
+            default:
+                break; // Non-callable object type.
         }
     }
+    runtimeError("Can only call functions and classes.");
+    return false;
 }
 static bool invokeFromClass(ObjClass* klass, ObjString* name,
  int argCount) {
@@ -141,6 +161,55 @@ static bool invokeFromClass(ObjClass* klass, ObjString* name,
         return false;
     }
     return call(AS_CLOSURE(method), argCount);
+}
+
+// BETA-style recursive method lookup: search from superclass down to subclass
+static ObjClass* findMethodDefiningClass(ObjClass* klass, ObjString* name, Value* outMethod) {
+    // Recursively search in superclass first (top-down)
+    if (klass->superclass != NULL) {
+        ObjClass* superDefiningClass = findMethodDefiningClass(klass->superclass, name, outMethod);
+        if (superDefiningClass != NULL) {
+            return superDefiningClass;  // Method found in superclass chain
+        }
+    }
+    
+    // If not in superclass, check current class
+    if (tableGet(&klass->methods, name, outMethod)) {
+        return klass;
+    }
+    
+    return NULL;
+}
+
+// Invoke with BETA-style method lookup
+static bool invokeTopDown(ObjString* name, int argCount) {
+    Value receiver = peek(argCount);
+    if (!IS_INSTANCE(receiver)) {
+        runtimeError("Only instances have methods.");
+        return false;
+    }
+    ObjInstance* instance = AS_INSTANCE(receiver);
+    
+    // Check instance fields first
+    Value value;
+    if (tableGet(&instance->fields, name, &value)) {
+        vm.stackTop[-argCount - 1] = value;
+        return callValue(value, argCount);
+    }
+    
+    // BETA-style: find method starting from top of class hierarchy
+    Value method;
+    ObjClass* definingClass = findMethodDefiningClass(instance->klass, name, &method);
+    
+    if (definingClass != NULL) {
+        // Create a bound method with the defining class  
+        ObjBoundMethod* bound = newBoundMethod(receiver, AS_CLOSURE(method), definingClass);
+        vm.stackTop[-argCount - 1] = OBJ_VAL(bound);
+        return call(AS_CLOSURE(method), argCount);
+    }
+    
+    runtimeError("Undefined property '%s'.", name->chars);
+    return false;
 }
 static bool invoke(ObjString* name, int argCount) {
     Value receiver = peek(argCount);
@@ -154,17 +223,21 @@ static bool invoke(ObjString* name, int argCount) {
         vm.stackTop[-argCount - 1] = value;
         return callValue(value, argCount);
     }
-    return invokeFromClass(instance->klass, name, argCount);
+    // Use BETA-style top-down method lookup
+    return invokeTopDown(name, argCount);
 }
 
 static bool bindMethod(ObjClass* klass, ObjString* name) {
     Value method;
-    if (!tableGet(&klass->methods, name, &method)) {
+    // Use BETA-style lookup to find which class defines this method
+    ObjClass* definingClass = findMethodDefiningClass(klass, name, &method);
+    
+    if (definingClass == NULL) {
         runtimeError("Undefined property '%s'.", name->chars);
         return false;
     }
     ObjBoundMethod* bound = newBoundMethod(peek(0),
-    AS_CLOSURE(method));
+    AS_CLOSURE(method), definingClass);
     pop();
     push(OBJ_VAL(bound));
     return true;
@@ -399,6 +472,53 @@ push(valueType(a op b)); \
                 frame = &vm.frames[vm.frameCount - 1];
                 break;
             }
+            case OP_INNER_INVOKE: {
+                // BETA-style inner call: call the next method down the inheritance chain
+                ObjString* methodName = READ_STRING();
+                int argCount = READ_BYTE();
+                
+                // Get the receiver (this)
+                Value receiver = peek(argCount);
+                if (!IS_INSTANCE(receiver)) {
+                    runtimeError("Only instances have methods.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                
+                ObjInstance* instance = AS_INSTANCE(receiver);
+                
+                // Get the current method's defining class from the call frame
+                if (frame->definingClass == NULL) {
+                    runtimeError("Can't call inner outside of a method.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                
+                // Find the next class down the hierarchy from definingClass
+                // Look for the method in the subclass of the defining class
+                Value method;
+                ObjClass* nextClass = NULL;
+                
+                // Search in instance's class to find the method below the current defining class
+                if (instance->klass != frame->definingClass) {
+                    // instance->klass is a subclass of definingClass
+                    // Look for the method in instance->klass
+                    if (tableGet(&instance->klass->methods, methodName, &method)) {
+                        nextClass = instance->klass;
+                    }
+                }
+                
+                if (nextClass != NULL) {
+                    // Call the inner method
+                    ObjBoundMethod* bound = newBoundMethod(receiver, AS_CLOSURE(method), nextClass);
+                    vm.stackTop[-argCount - 1] = OBJ_VAL(bound);
+                    if (!callMethod(AS_CLOSURE(method), argCount, nextClass)) {
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                }
+                // If no inner method found, do nothing (as per BETA spec)
+                
+                frame = &vm.frames[vm.frameCount - 1];
+                break;
+            }
             case OP_CLOSURE: {
                 ObjFunction* function = AS_FUNCTION(READ_CONSTANT());
                 ObjClosure* closure = newClosure(function);
@@ -470,9 +590,10 @@ push(valueType(a op b)); \
                 if (!IS_CLASS(superclass)) {
                     runtimeError("Superclass must be a class.");
                     return INTERPRET_RUNTIME_ERROR;
+                }
                 ObjClass* subclass = AS_CLASS(peek(0));
-                tableAddAll(&AS_CLASS(superclass)->methods,
-                &subclass->methods);
+                subclass->superclass = AS_CLASS(superclass);  // Just store the superclass pointer
+                // Don't copy methods - BETA-style uses top-down lookup
                 pop(); // Subclass.
                 break;
             }

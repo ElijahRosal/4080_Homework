@@ -67,9 +67,10 @@ typedef struct {
     int upvalueCount;
 
 } ObjClosure;
-typedef struct {
+typedef struct ObjClass {
     Obj obj;
     ObjString* name;
+    struct ObjClass* superclass;  // For BETA-style method resolution
     Table methods;
 } ObjClass;
 typedef struct {
@@ -81,8 +82,9 @@ typedef struct {
     Obj obj;
     Value receiver;
     ObjClosure* method;
+    ObjClass* definingClass;  // Class where this method is defined (for inner)
 } ObjBoundMethod;
-ObjBoundMethod* newBoundMethod(Value receiver, ObjClosure* method);
+ObjBoundMethod* newBoundMethod(Value receiver, ObjClosure* method, ObjClass* definingClass);
 ObjClosure* newClosure(ObjFunction* function);
 ObjFunction* newFunction();
 ObjNative* newNative(NativeFn function);
