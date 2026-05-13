@@ -150,10 +150,8 @@ int main(int argc, const char* argv[]) {
     // Initialize the VM
     initVM();
     
-    printf("╔════════════════════════════════════════════════════════════╗\n");
-    printf("║   Init Method Lookup Performance Benchmark                ║\n");
-    printf("║   Comparing Hash Table vs Cached Method Lookup            ║\n");
-    printf("╚════════════════════════════════════════════════════════════╝\n\n");
+    printf("   Init Method Lookup Performance Benchmark                \n");
+    printf("   Comparing Hash Table vs Cached Method Lookup            \n");
     
     // Run benchmarks
     benchmark_table_lookup();
@@ -162,12 +160,10 @@ int main(int argc, const char* argv[]) {
     benchmark_cached_lookup();
     printf("─────────────────────────────────────────────────────────────\n\n");
     
-    printf("╔════════════════════════════════════════════════════════════╗\n");
-    printf("║   Summary:                                                ║\n");
-    printf("║   The cached lookup should be significantly faster than   ║\n");
-    printf("║   the hash table lookup, especially with many classes     ║\n");
-    printf("║   and instance creations.                                 ║\n");
-    printf("╚════════════════════════════════════════════════════════════╝\n");
+    printf("   Summary:                                                \n");
+    printf("   The cached lookup should be significantly faster than   \n");
+    printf("   the hash table lookup, especially with many classes     \n");
+    printf("   and instance creations.                                 \n");
     
     freeVM();
     
