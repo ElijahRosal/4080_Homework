@@ -1,3 +1,10 @@
+// Elijah Rosal - CS4080 - Homework 14, Chapter 29 Question 1
+// 5.12.2026
+/*
+Modified OP_INHERIT to set the superclass pointer on the subclass,
+enabling tracking of inheritance relationships for field conflict resolution.
+*/
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -470,7 +477,9 @@ push(valueType(a op b)); \
                 if (!IS_CLASS(superclass)) {
                     runtimeError("Superclass must be a class.");
                     return INTERPRET_RUNTIME_ERROR;
+                }
                 ObjClass* subclass = AS_CLASS(peek(0));
+                subclass->superclass = AS_CLASS(superclass);
                 tableAddAll(&AS_CLASS(superclass)->methods,
                 &subclass->methods);
                 pop(); // Subclass.

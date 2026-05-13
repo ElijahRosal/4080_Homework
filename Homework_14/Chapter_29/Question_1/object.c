@@ -1,3 +1,10 @@
+// Elijah Rosal - CS4080 - Homework 14, Chapter 29 Question 1
+// 5.12.2026
+/*
+Modified ObjClass to include a superclass pointer, tracking the inheritance chain
+for field conflict resolution through class-qualified field names.
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include "memory.h"
@@ -29,6 +36,7 @@ ObjBoundMethod* newBoundMethod(Value receiver,
 ObjClass* newClass(ObjString* name) {
     ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS);
     klass->name = name;
+    klass->superclass = NULL;
     initTable(&klass->methods);
     return klass;
 }

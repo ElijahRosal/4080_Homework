@@ -1,3 +1,12 @@
+// Elijah Rosal - CS4080 - Homework 14, Chapter 29 Question 1
+// 5.12.2026
+/*
+Modified to implement class-qualified field names that prevent field name conflicts 
+in inheritance hierarchies. Fields accessed within methods are automatically prefixed 
+with the class name (e.g., this.x becomes ClassName.x internally), ensuring that 
+parent and child classes can safely use the same field names without collision.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -61,6 +70,7 @@ typedef struct Compiler {
 typedef struct ClassCompiler {
     struct ClassCompiler* enclosing;
     bool hasSuperclass;
+    ObjString* name;
 } ClassCompiler;
 Parser parser;
 Compiler* current = NULL;
@@ -239,6 +249,20 @@ static uint8_t identifierConstant(Token* name) {
     name->length)));
 }
 
+static uint8_t qualifiedFieldConstant(ObjString* className, Token* fieldName) {
+    // Build the qualified name: "ClassName.fieldName"
+    int totalLength = className->length + 1 + fieldName->length;
+    char* qualifiedName = (char*)malloc(totalLength + 1);
+    memcpy(qualifiedName, className->chars, className->length);
+    qualifiedName[className->length] = '.';
+    memcpy(qualifiedName + className->length + 1, fieldName->start, fieldName->length);
+    qualifiedName[totalLength] = '\0';
+    
+    uint8_t constant = makeConstant(OBJ_VAL(copyString(qualifiedName, totalLength)));
+    free(qualifiedName);
+    return constant;
+}
+
 static bool identifiersEqual(Token* a, Token* b) {
     if (a->length != b->length) return false;
     return memcmp(a->start, b->start, a->length) == 0;
@@ -384,7 +408,17 @@ static void call(bool canAssign) {
 }
 static void dot(bool canAssign) {
     consume(TOKEN_IDENTIFIER, "Expect property name after '.'.");
-    uint8_t name = identifierConstant(&parser.previous);
+    Token fieldName = parser.previous;
+    
+    // When inside a method of a class, qualify field names with the class name
+    // to prevent field name conflicts in inheritance hierarchies
+    uint8_t name;
+    if (current->type == TYPE_METHOD && currentClass != NULL) {
+        name = qualifiedFieldConstant(currentClass->name, &fieldName);
+    } else {
+        name = identifierConstant(&fieldName);
+    }
+    
     if (canAssign && match(TOKEN_EQUAL)) {
         expression();
         emitBytes(OP_SET_PROPERTY, name);
@@ -686,6 +720,7 @@ static void classDeclaration() {
     ClassCompiler classCompiler;
     classCompiler.hasSuperclass = false;
     classCompiler.enclosing = currentClass;
+    classCompiler.name = copyString(className.start, className.length);
     currentClass = &classCompiler;
     if (match(TOKEN_LESS)) {
         consume(TOKEN_IDENTIFIER, "Expect superclass name.");

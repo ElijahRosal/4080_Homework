@@ -1,3 +1,9 @@
+// Elijah Rosal - CS4080 - Homework 14, Chapter 29 Question 1
+// 5.12.2026
+/*
+Modified ObjClass structure to include a superclass pointer for tracking inheritance
+relationships. This supports class-qualified field names that prevent field conflicts.
+*/
 #ifndef clox_object_h
 #define clox_object_h
 #include "common.h"
@@ -67,10 +73,11 @@ typedef struct {
     int upvalueCount;
 
 } ObjClosure;
-typedef struct {
+typedef struct ObjClass {
     Obj obj;
     ObjString* name;
     Table methods;
+    struct ObjClass* superclass;
 } ObjClass;
 typedef struct {
  Obj obj;
