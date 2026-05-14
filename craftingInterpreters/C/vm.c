@@ -242,7 +242,7 @@ double a = AS_NUMBER(pop()); \
 push(valueType(a op b)); \
 } while (false)
     for (;;) {
-        #ifdef DEBUG_TRACE_EXECUTION
+#ifdef DEBUG_TRACE_EXECUTION
         printf(" ");
         for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
             printf("[ ");
@@ -251,7 +251,7 @@ push(valueType(a op b)); \
         }
         printf("\n");
         disassembleInstruction(&frame->closure->function->chunk, (int)(frame->ip - frame->closure->function->chunk.code));
-        #endif
+#endif
         uint8_t instruction;
         switch (instruction = READ_BYTE()) {
             case OP_CONSTANT: {
@@ -470,22 +470,23 @@ push(valueType(a op b)); \
                 if (!IS_CLASS(superclass)) {
                     runtimeError("Superclass must be a class.");
                     return INTERPRET_RUNTIME_ERROR;
-                ObjClass* subclass = AS_CLASS(peek(0));
-                tableAddAll(&AS_CLASS(superclass)->methods,
-                &subclass->methods);
-                pop(); // Subclass.
-                break;
-            }
-            case OP_METHOD:
+                    ObjClass* subclass = AS_CLASS(peek(0));
+                    tableAddAll(&AS_CLASS(superclass)->methods,
+                    &subclass->methods);
+                    pop(); // Subclass.
+                    break;
+                }
+                case OP_METHOD:
                 defineMethod(READ_STRING());
                 break;
+            }
         }
-    }
 #undef READ_BYTE
 #undef READ_SHORT
 #undef READ_CONSTANT
 #undef READ_STRING
 #undef BINARY_OP
+    }
 }
 InterpretResult interpret(const char* source) {
     ObjFunction* function = compile(source);
@@ -494,5 +495,4 @@ InterpretResult interpret(const char* source) {
     push(OBJ_VAL(closure));
     call(closure, 0);
     return run();
-
 }
