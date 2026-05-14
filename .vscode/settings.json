@@ -1,0 +1,19 @@
+{
+    "C_Cpp.default.compilerPath": "C:/msys64/ucrt64/bin/gcc.exe",
+    "java.project.sourcePaths": [
+        "craftingInterpreters/src",
+        "Homework_2",
+        "Homework_3/Chapter_6/Question_1",
+        "Homework_3/Chapter_6/Question_2",
+        "Homework_3/Chapter_6/Question_3",
+        "Homework_3/Chapter_7/Question_2",
+        "Homework_3/Chapter_7/Question_3",
+        "Homework_4/Chapter_8/Question_1",
+        "Homework_4/Chapter_8/Question_2",
+        "Homework_4/Chapter_9/Question_3",
+        "Homework_5/Chapter_10/Question_2",
+        "Homework_5/Chapter_11/Question_3",
+        "Homework_5/Chapter_11/Question_4"
+    ],
+    "cmake.sourceDirectory": "C:/Users/elije/Desktop/Scool/CS4080/H1/craftingInterpreters/C"
+}
